@@ -1,122 +1,102 @@
-#include <Wire.h>
-#include <OneButton.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include <Arduino.h>
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define I2C_SDA 8
-#define I2C_SCL 9
+#include "config.h"
+#include "src/app_manager.h"
+#include "src/input_manager.h"
+#include "src/display_manager.h"
+#include "src/menu_app.h"
+#include "src/menu_types.h"
+#include "src/about_app.h"
 
-#define BTN_UP 2
-#define BTN_DOWN 1
-#define BTN_LEFT 0
-#define BTN_RIGHT 3
+// =========================
+// Global managers
+// =========================
+DisplayManager displayManager;
+InputManager inputManager;
+AppManager appManager;
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-OneButton buttonUp(BTN_UP, true);
-OneButton buttonDown(BTN_DOWN, true);
-OneButton buttonLeft(BTN_LEFT, true);
-OneButton buttonRight(BTN_RIGHT, true);
+// =========================
+// App instances
+// =========================
+AboutApp aboutApp(&displayManager);
+MenuApp* menuApp = nullptr;
 
-const char* menu[] = {"Scan", "Results", "Tools", "Settings", "About"};
-int menuIndex = 0;
+// =========================
+// Navigation helpers
+// =========================
+void openAboutApp();
+void goBackApp();
 
-void setupDisplay() {
-  Wire.begin(I2C_SDA, I2C_SCL);
+// =========================
+// Menu definitions
+// =========================
+extern Menu toolsMenu;
+extern Menu mainMenu;
 
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
-    for(;;);
-  }
+MenuItem toolsItems[] = {
+  { "Back", MENU_BACK, nullptr, nullptr }
+};
 
-  display.clearDisplay();     
-  display.setTextSize(1);     
-  display.setTextColor(WHITE);
-  display.setRotation(2);
+MenuItem mainItems[] = {
+  { "Tools", MENU_SUBMENU, nullptr, &toolsMenu },
+  { "About", MENU_ACTION, openAboutApp, nullptr }
+};
 
-  display.println("ESP32-C3 Ready!");
-  display.println("OLED 0.96 Active");
-  display.display();
+Menu toolsMenu = {
+  "Tools",
+  toolsItems,
+  sizeof(toolsItems) / sizeof(toolsItems[0]),
+  &mainMenu
+};
+
+Menu mainMenu = {
+  "Main Menu",
+  mainItems,
+  sizeof(mainItems) / sizeof(mainItems[0]),
+  nullptr
+};
+
+// =========================
+// Menu app instance
+// =========================
+MenuApp mainMenuApp(&mainMenu, &displayManager);
+
+// =========================
+// Actions
+// =========================
+void openAboutApp() {
+  appManager.openApp(&aboutApp);
 }
 
-void buttonUpClick() {
-  if (menuIndex > 0) {
-    menuIndex--;
-  }
+void goBackApp() {
+  appManager.goBack();
 }
 
-void buttonDownClick() {
-  if (menuIndex < (sizeof(menu) / sizeof(menu[0])) - 1) {
-    menuIndex++;
-  }
-}
-
-void buttonLeftClick() {
-}
-
-void buttonRightClick() {
-}
-
-void setupButtons() {
-  pinMode(BTN_UP, INPUT_PULLUP);
-  pinMode(BTN_DOWN, INPUT_PULLUP);
-  pinMode(BTN_LEFT, INPUT_PULLUP);
-  pinMode(BTN_RIGHT, INPUT_PULLUP);
-
-  buttonUp.setClickMs(200);
-  buttonUp.setPressMs(500);
-  buttonUp.setDebounceMs(20);
-  buttonUp.attachClick(buttonUpClick);
-
-  buttonDown.setClickMs(200);
-  buttonDown.setPressMs(500);
-  buttonDown.setDebounceMs(20);
-  buttonDown.attachClick(buttonDownClick);
-
-  buttonLeft.setClickMs(200);
-  buttonLeft.setPressMs(500);
-  buttonLeft.setDebounceMs(20);
-  buttonLeft.attachClick(buttonLeftClick);
-
-  buttonRight.setClickMs(200);
-  buttonRight.setPressMs(500);
-  buttonRight.setDebounceMs(20);
-  buttonRight.attachClick(buttonRightClick);
-}
+// =========================
+// Setup / loop
+// =========================
 
 void setup() {
   Serial.begin(115200);
 
-  setupDisplay();
-  setupButtons();
+  if (!displayManager.begin()) {
+    while (true) {
+    }
+  }
 
-  delay(2000);
+  inputManager.begin();
+
+  appManager.openApp(&mainMenuApp);
 }
 
 void loop() {
-  buttonUp.tick();
-  buttonDown.tick();
-  buttonLeft.tick();
-  buttonRight.tick();
+  inputManager.update();
 
-  display.clearDisplay();
-  display.setCursor(0, 0);
-
-  int itemHeight = 12;
-
-  for (int i = 0; i < sizeof(menu) / sizeof(menu[0]); i++) {
-      int yPos = i * itemHeight;
-
-      if (i == menuIndex) {
-        display.fillRect(0, yPos, display.width(), itemHeight, WHITE); 
-        display.setTextColor(BLACK);
-      } else {
-        display.setTextColor(WHITE);
-      }
-
-      display.setCursor(5, yPos + 2);
-      display.print(menu[i]);
+  InputEvent event = inputManager.getEvent();
+  if (event != EVENT_NONE) {
+    appManager.handleInput(event);
   }
 
-  display.display();
+  appManager.update();
+  appManager.render();
 }
