@@ -19,6 +19,9 @@ OneButton buttonDown(BTN_DOWN, true);
 OneButton buttonLeft(BTN_LEFT, true);
 OneButton buttonRight(BTN_RIGHT, true);
 
+const char* menu[] = {"Scan", "Results", "Tools", "Settings", "About"};
+int menuIndex = 0;
+
 void setupDisplay() {
   Wire.begin(I2C_SDA, I2C_SCL);
 
@@ -37,9 +40,15 @@ void setupDisplay() {
 }
 
 void buttonUpClick() {
+  if (menuIndex > 0) {
+    menuIndex--;
+  }
 }
 
 void buttonDownClick() {
+  if (menuIndex < (sizeof(menu) / sizeof(menu[0])) - 1) {
+    menuIndex++;
+  }
 }
 
 void buttonLeftClick() {
@@ -89,4 +98,25 @@ void loop() {
   buttonDown.tick();
   buttonLeft.tick();
   buttonRight.tick();
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+
+  int itemHeight = 12;
+
+  for (int i = 0; i < sizeof(menu) / sizeof(menu[0]); i++) {
+      int yPos = i * itemHeight;
+
+      if (i == menuIndex) {
+        display.fillRect(0, yPos, display.width(), itemHeight, WHITE); 
+        display.setTextColor(BLACK);
+      } else {
+        display.setTextColor(WHITE);
+      }
+
+      display.setCursor(5, yPos + 2);
+      display.print(menu[i]);
+  }
+
+  display.display();
 }
