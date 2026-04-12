@@ -7,6 +7,7 @@
 #include "src/menu_app.h"
 #include "src/menu_types.h"
 #include "src/about_app.h"
+#include "src/scan_app.h"
 
 // =========================
 // Global managers
@@ -18,14 +19,16 @@ AppManager appManager;
 // =========================
 // App instances
 // =========================
-AboutApp aboutApp(&displayManager);
 MenuApp* menuApp = nullptr;
+AboutApp aboutApp(&displayManager);
+ScanApp scanApp(&displayManager);
 
 // =========================
 // Navigation helpers
 // =========================
-void openAboutApp();
 void goBackApp();
+void openAboutApp();
+void openScanApp();
 
 // =========================
 // Menu definitions
@@ -34,6 +37,7 @@ extern Menu toolsMenu;
 extern Menu mainMenu;
 
 MenuItem toolsItems[] = {
+  { "Scan", MENU_ACTION, openScanApp, nullptr },
   { "Back", MENU_BACK, nullptr, nullptr }
 };
 
@@ -64,12 +68,16 @@ MenuApp mainMenuApp(&mainMenu, &displayManager);
 // =========================
 // Actions
 // =========================
+void goBackApp() {
+  appManager.goBack();
+}
+
 void openAboutApp() {
   appManager.openApp(&aboutApp);
 }
 
-void goBackApp() {
-  appManager.goBack();
+void openScanApp() {
+  appManager.openApp(&scanApp);
 }
 
 // =========================
