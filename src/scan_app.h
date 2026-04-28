@@ -30,7 +30,7 @@ class ScanApp : public App {
     private:
     DisplayManager* displayManager;
     bool redraw;
-    
+
     WifiNetwork networks[MAX_NETWORKS];
     int networkCount;
 
@@ -64,7 +64,8 @@ class ScanApp : public App {
     void handleInput(InputEvent event) override;
     void update() override;
     void render() override;
-    
+    void forceRedraw() override { redraw = true; }
+
     bool needsRedraw() const override;
     void clearRedrawFlag() override;
 };

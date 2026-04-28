@@ -29,6 +29,7 @@ class MenuApp : public App {
   void onEnter() override;
   void handleInput(InputEvent event) override;
   void render() override;
+  void forceRedraw() override { redraw = true; }
 
   bool needsRedraw() const override;
   void clearRedrawFlag() override;

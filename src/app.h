@@ -20,4 +20,5 @@ class App {
 
   virtual bool needsRedraw() const = 0;
   virtual void clearRedrawFlag() = 0;
+  virtual void forceRedraw() {}
 };

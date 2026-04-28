@@ -8,6 +8,7 @@
 #include "src/menu_types.h"
 #include "src/about_app.h"
 #include "src/scan_app.h"
+#include "src/battery_app.h"
 
 // =========================
 // Global managers
@@ -22,6 +23,7 @@ AppManager appManager;
 MenuApp* menuApp = nullptr;
 AboutApp aboutApp(&displayManager);
 ScanApp scanApp(&displayManager);
+BatteryApp batteryApp(&displayManager);
 
 // =========================
 // Navigation helpers
@@ -29,6 +31,7 @@ ScanApp scanApp(&displayManager);
 void goBackApp();
 void openAboutApp();
 void openScanApp();
+void openBatteryApp();
 
 // =========================
 // Menu definitions
@@ -37,13 +40,14 @@ extern Menu toolsMenu;
 extern Menu mainMenu;
 
 MenuItem toolsItems[] = {
-  { "Scan", MENU_ACTION, openScanApp, nullptr },
-  { "Back", MENU_BACK, nullptr, nullptr }
+  { "Scan",    MENU_ACTION, openScanApp,    nullptr },
+  { "Battery", MENU_ACTION, openBatteryApp, nullptr },
+  { "Back",    MENU_BACK,   nullptr,        nullptr }
 };
 
 MenuItem mainItems[] = {
-  { "Tools", MENU_SUBMENU, nullptr, &toolsMenu },
-  { "About", MENU_ACTION, openAboutApp, nullptr }
+  { "Tools", MENU_SUBMENU, nullptr,       &toolsMenu },
+  { "About", MENU_ACTION,  openAboutApp,  nullptr }
 };
 
 Menu toolsMenu = {
@@ -80,6 +84,10 @@ void openScanApp() {
   appManager.openApp(&scanApp);
 }
 
+void openBatteryApp() {
+  appManager.openApp(&batteryApp);
+}
+
 // =========================
 // Setup / loop
 // =========================
@@ -88,12 +96,12 @@ void setup() {
   Serial.begin(115200);
 
   if (!displayManager.begin()) {
-    while (true) {
-    }
+    while (true) {}
   }
 
   inputManager.begin();
 
+  appManager.setDisplayManager(&displayManager);
   appManager.openApp(&mainMenuApp);
 }
 

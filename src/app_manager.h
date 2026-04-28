@@ -1,6 +1,7 @@
 #pragma once
 
 #include "app.h"
+#include "display_manager.h"
 
 class AppManager {
   private:
@@ -10,8 +11,12 @@ class AppManager {
   App* appStack[MAX_STACK];
   int stackTop;
 
+  DisplayManager* displayManager;
+
   public:
   AppManager();
+
+  void setDisplayManager(DisplayManager* dm);
 
   void openApp(App* app);
   void goBack();

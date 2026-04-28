@@ -4,7 +4,7 @@
 extern void goBackApp();
 
 ScanApp::ScanApp(DisplayManager* dm)
-    : displayManager(dm), 
+    : displayManager(dm),
       redraw(true),
       networkCount(0),
       scanState(SCAN_IDLE),
@@ -13,10 +13,6 @@ ScanApp::ScanApp(DisplayManager* dm)
       scrollOffset(0),
       lastScanTime(0),
       lastCountdownSecond(0) {}
-
-// =========================
-// Lifecycle
-// =========================
 
 void ScanApp::onEnter() {
     currentView = VIEW_LIST;
@@ -33,21 +29,13 @@ void ScanApp::onExit() {
     }
 }
 
-// =========================
-// Input
-// =========================
-
 void ScanApp::handleInput(InputEvent event) {
     if (scanState == SCAN_IN_PROGRESS) return;
 
     if (currentView == VIEW_LIST) {
         switch (event) {
-            case EVENT_UP:
-                moveUp();
-                break;
-            case EVENT_DOWN:
-                moveDown();
-                break;
+            case EVENT_UP:   moveUp();   break;
+            case EVENT_DOWN: moveDown(); break;
             case EVENT_RIGHT: {
                 bool onRescan = (selectedIndex == networkCount);
                 if (onRescan) {
@@ -61,8 +49,7 @@ void ScanApp::handleInput(InputEvent event) {
             case EVENT_LEFT:
                 goBackApp();
                 break;
-            default:
-                break;
+            default: break;
         }
     } else if (currentView == VIEW_DETAIL) {
         if (event == EVENT_LEFT || event == EVENT_RIGHT) {
@@ -71,10 +58,6 @@ void ScanApp::handleInput(InputEvent event) {
         }
     }
 }
-
-// =========================
-// Update (called every loop)
-// =========================
 
 void ScanApp::update() {
     if (scanState == SCAN_IN_PROGRESS) {
@@ -85,13 +68,11 @@ void ScanApp::update() {
     if (scanState == SCAN_DONE) {
         unsigned long now = millis();
 
-        // Auto-rescan
         if (currentView == VIEW_LIST && now - lastScanTime >= AUTO_SCAN_INTERVAL_MS) {
             startScan();
             return;
         }
 
-        // Обнови само когато секундата се смени
         unsigned long currentSecond = (AUTO_SCAN_INTERVAL_MS - (now - lastScanTime)) / 1000;
         if (currentSecond != lastCountdownSecond) {
             lastCountdownSecond = currentSecond;
@@ -100,14 +81,9 @@ void ScanApp::update() {
     }
 }
 
-// =========================
-// Scan logic
-// =========================
-
 void ScanApp::startScan() {
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
-
     WiFi.scanNetworks(true);
 
     scanState = SCAN_IN_PROGRESS;
@@ -135,11 +111,9 @@ void ScanApp::checkScanResult() {
     for (int i = 0; i < networkCount; i++) {
         strncpy(networks[i].ssid, WiFi.SSID(i).c_str(), 32);
         networks[i].ssid[32] = '\0';
-
-        networks[i].rssi = WiFi.RSSI(i);
+        networks[i].rssi    = WiFi.RSSI(i);
         networks[i].channel = WiFi.channel(i);
-        networks[i].isOpen = (WiFi.encryptionType(i) == WIFI_AUTH_OPEN);
-
+        networks[i].isOpen  = (WiFi.encryptionType(i) == WIFI_AUTH_OPEN);
         strncpy(networks[i].bssid, WiFi.BSSIDstr(i).c_str(), 17);
         networks[i].bssid[17] = '\0';
     }
@@ -152,10 +126,6 @@ void ScanApp::checkScanResult() {
     redraw = true;
 }
 
-// =========================
-// Render dispatch
-// =========================
-
 void ScanApp::render() {
     if (scanState == SCAN_IN_PROGRESS) {
         renderScanning();
@@ -165,10 +135,6 @@ void ScanApp::render() {
         renderList();
     }
 }
-
-// =========================
-// Render: Scanning screen
-// =========================
 
 void ScanApp::renderScanning() {
     Adafruit_SSD1306& display = displayManager->getDisplay();
@@ -188,14 +154,8 @@ void ScanApp::renderScanning() {
     display.setCursor(0, 32);
     for (int i = 0; i < dots; i++) display.print(".");
 
-    display.display();
-
-    redraw = true;
+    // БЕЗ display.display() — извиква се от AppManager
 }
-
-// =========================
-// Render: List view
-// =========================
 
 void ScanApp::renderList() {
     Adafruit_SSD1306& display = displayManager->getDisplay();
@@ -208,7 +168,6 @@ void ScanApp::renderList() {
     display.print("WiFi Scanner");
     display.drawLine(0, 10, 127, 10, WHITE);
 
-    // Countdown
     if (scanState == SCAN_DONE) {
         unsigned long elapsed = millis() - lastScanTime;
         unsigned long remaining = 0;
@@ -217,7 +176,7 @@ void ScanApp::renderList() {
         }
         char countdownStr[8];
         snprintf(countdownStr, sizeof(countdownStr), "%lus", remaining);
-        int countdownX = 128 - strlen(countdownStr) * 6;
+        int countdownX = 112 - strlen(countdownStr) * 6;
         display.setCursor(countdownX, 0);
         display.print(countdownStr);
     }
@@ -225,7 +184,6 @@ void ScanApp::renderList() {
     int total = networkCount + 1;
     const int itemHeight = 10;
     const int startY = 13;
-
     const int SCROLLBAR_X = 121;
     const int CONTENT_WIDTH = 120;
 
@@ -236,7 +194,7 @@ void ScanApp::renderList() {
         int visibleIndex = i - scrollOffset;
         int y = startY + visibleIndex * itemHeight;
 
-        bool isRescan = (i == networkCount);
+        bool isRescan   = (i == networkCount);
         bool isSelected = (i == selectedIndex);
 
         if (isSelected) {
@@ -257,7 +215,7 @@ void ScanApp::renderList() {
             int rssiWidth = strlen(rssiStr) * 6;
             int lockWidth = networks[i].isOpen ? 0 : 8;
 
-            int ssidMaxPx = CONTENT_WIDTH - rssiWidth - lockWidth - 6;
+            int ssidMaxPx    = CONTENT_WIDTH - rssiWidth - lockWidth - 6;
             int ssidMaxChars = ssidMaxPx / 6;
 
             char label[18];
@@ -284,7 +242,6 @@ void ScanApp::renderList() {
         }
     }
 
-    // Scrollbar
     if (total > VISIBLE_ITEMS) {
         int barHeight = (VISIBLE_ITEMS * 40) / total;
         if (barHeight < 4) barHeight = 4;
@@ -293,12 +250,8 @@ void ScanApp::renderList() {
         display.fillRect(SCROLLBAR_X, barY, 3, barHeight, WHITE);
     }
 
-    display.display();
+    // БЕЗ display.display() — извиква се от AppManager
 }
-
-// =========================
-// Render: Detail view
-// =========================
 
 void ScanApp::renderDetail() {
     Adafruit_SSD1306& display = displayManager->getDisplay();
@@ -318,7 +271,6 @@ void ScanApp::renderDetail() {
     display.drawLine(0, 10, 127, 10, WHITE);
 
     display.setCursor(0, 13);
-
     display.print("RSSI: ");
     display.print(net.rssi);
     display.println(" dBm");
@@ -335,20 +287,14 @@ void ScanApp::renderDetail() {
     display.setCursor(0, 57);
     display.print("LEFT/RIGHT = Back");
 
-    display.display();
+    // БЕЗ display.display() — извиква се от AppManager
 }
-
-// =========================
-// Scroll helpers
-// =========================
 
 void ScanApp::moveUp() {
     int total = networkCount + 1;
     if (total == 0) return;
-
     if (selectedIndex > 0) selectedIndex--;
     else selectedIndex = total - 1;
-
     updateScroll();
     redraw = true;
 }
@@ -356,10 +302,8 @@ void ScanApp::moveUp() {
 void ScanApp::moveDown() {
     int total = networkCount + 1;
     if (total == 0) return;
-
     if (selectedIndex < total - 1) selectedIndex++;
     else selectedIndex = 0;
-
     updateScroll();
     redraw = true;
 }
@@ -371,21 +315,15 @@ void ScanApp::updateScroll() {
     } else if (selectedIndex >= scrollOffset + VISIBLE_ITEMS) {
         scrollOffset = selectedIndex - VISIBLE_ITEMS + 1;
     }
-
     int maxScroll = total - VISIBLE_ITEMS;
     if (maxScroll < 0) maxScroll = 0;
     if (scrollOffset > maxScroll) scrollOffset = maxScroll;
 }
 
-// =========================
-// Redraw flags
-// =========================
-
-bool ScanApp::needsRedraw() const {
-    return redraw;
-}
+bool ScanApp::needsRedraw() const { return redraw; }
 
 void ScanApp::clearRedrawFlag() {
+    // При сканиране анимацията трябва да се обновява
     if (scanState != SCAN_IN_PROGRESS) {
         redraw = false;
     }

@@ -1,4 +1,5 @@
 #include "about_app.h"
+#include <Adafruit_SSD1306.h>
 
 extern void goBackApp();
 
@@ -33,13 +34,8 @@ void AboutApp::render() {
   display.println();
   display.println("LEFT = Back");
 
-  display.display();
+  // БЕЗ display.display() — извиква се от AppManager
 }
 
-bool AboutApp::needsRedraw() const {
-  return redraw;
-}
-
-void AboutApp::clearRedrawFlag() {
-  redraw = false;
-}
+bool AboutApp::needsRedraw() const { return redraw; }
+void AboutApp::clearRedrawFlag() { redraw = false; }
