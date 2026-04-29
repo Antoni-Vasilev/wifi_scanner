@@ -1,12 +1,6 @@
 #pragma once
 
-enum InputEvent {
-  EVENT_NONE,
-  EVENT_UP,
-  EVENT_DOWN,
-  EVENT_LEFT,
-  EVENT_RIGHT
-};
+#include "input_events.h"
 
 class App {
   public:

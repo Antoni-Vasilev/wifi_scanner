@@ -8,15 +8,14 @@ InputManager::InputManager()
     buttonDown(BTN_DOWN, true),
     buttonLeft(BTN_LEFT, true),
     buttonRight(BTN_RIGHT, true),
-    pendingEvent(EVENT_NONE) 
-  {
-      instance = this;
+    pendingEvent(EVENT_NONE) {
+  instance = this;
 }
 
 void InputManager::begin() {
-  pinMode(BTN_UP, INPUT_PULLUP);
-  pinMode(BTN_DOWN, INPUT_PULLUP);
-  pinMode(BTN_LEFT, INPUT_PULLUP);
+  pinMode(BTN_UP,    INPUT_PULLUP);
+  pinMode(BTN_DOWN,  INPUT_PULLUP);
+  pinMode(BTN_LEFT,  INPUT_PULLUP);
   pinMode(BTN_RIGHT, INPUT_PULLUP);
 
   buttonUp.setDebounceMs(25);
@@ -28,6 +27,10 @@ void InputManager::begin() {
   buttonDown.attachClick(onDownClick);
   buttonLeft.attachClick(onLeftClick);
   buttonRight.attachClick(onRightClick);
+
+  // Long press на RIGHT — 600ms
+  buttonRight.setLongPressIntervalMs(600);
+  buttonRight.attachLongPressStart(onRightLongPress);
 }
 
 void InputManager::update() {
@@ -47,18 +50,8 @@ void InputManager::pushEvent(InputEvent event) {
   pendingEvent = event;
 }
 
-void InputManager::onUpClick() {
-  if (instance) instance->pushEvent(EVENT_UP);
-}
-
-void InputManager::onDownClick() {
-  if (instance) instance->pushEvent(EVENT_DOWN);
-}
-
-void InputManager::onLeftClick() {
-  if (instance) instance->pushEvent(EVENT_LEFT);
-}
-
-void InputManager::onRightClick() {
-  if (instance) instance->pushEvent(EVENT_RIGHT);
-}
+void InputManager::onUpClick()        { if (instance) instance->pushEvent(EVENT_UP); }
+void InputManager::onDownClick()      { if (instance) instance->pushEvent(EVENT_DOWN); }
+void InputManager::onLeftClick()      { if (instance) instance->pushEvent(EVENT_LEFT); }
+void InputManager::onRightClick()     { if (instance) instance->pushEvent(EVENT_RIGHT); }
+void InputManager::onRightLongPress() { if (instance) instance->pushEvent(EVENT_RIGHT_LONG); }

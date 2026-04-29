@@ -2,16 +2,19 @@
 
 #include "app.h"
 #include "display_manager.h"
+#include "nvs_manager.h"
 #include <WiFi.h>
 
 #define MAX_NETWORKS 20
 #define AUTO_SCAN_INTERVAL_MS 30000
+#define RSSI_HISTORY_SIZE 30
 
 struct WifiNetwork {
     char ssid[33];
     int32_t rssi;
     uint8_t channel;
     bool isOpen;
+    bool isSaved;
     char bssid[18];
 };
 
@@ -29,6 +32,7 @@ enum ScanView {
 class ScanApp : public App {
     private:
     DisplayManager* displayManager;
+    NVSManager*     nvsManager;
     bool redraw;
 
     WifiNetwork networks[MAX_NETWORKS];
@@ -43,10 +47,18 @@ class ScanApp : public App {
     unsigned long lastScanTime;
     unsigned long lastCountdownSecond;
 
+    // RSSI история за графиката
+    int32_t rssiHistory[RSSI_HISTORY_SIZE];
+    int rssiHistoryCount;
+    unsigned long lastRssiSample;
+    int lastDetailIndex;
+    bool rssiScanPending;
+
     static const int VISIBLE_ITEMS = 5;
 
     void startScan();
     void checkScanResult();
+    void drawRssiGraph(int x, int y, int w, int h);
 
     void renderList();
     void renderScanning();
@@ -57,7 +69,7 @@ class ScanApp : public App {
     void moveDown();
 
     public:
-    ScanApp(DisplayManager* dm);
+    ScanApp(DisplayManager* dm, NVSManager* nvs);
 
     void onEnter() override;
     void onExit() override;
@@ -68,4 +80,7 @@ class ScanApp : public App {
 
     bool needsRedraw() const override;
     void clearRedrawFlag() override;
+
+    const char* getSelectedSSID() const;
+    bool selectedIsOpen() const;
 };

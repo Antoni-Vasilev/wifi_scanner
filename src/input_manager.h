@@ -1,7 +1,7 @@
 #pragma once
 
 #include <OneButton.h>
-#include "app.h"
+#include "input_events.h"
 
 class InputManager {
   private:
@@ -18,6 +18,7 @@ class InputManager {
   static void onDownClick();
   static void onLeftClick();
   static void onRightClick();
+  static void onRightLongPress();
 
   void pushEvent(InputEvent event);
 
