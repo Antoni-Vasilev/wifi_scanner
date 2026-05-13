@@ -15,6 +15,10 @@
 #include "src/speedtest_app.h"
 #include "src/nvs_manager.h"
 #include "src/saved_app.h"
+#include "src/pacman_app.h"
+#include "src/tetris_app.h"
+#include "src/snake_app.h"
+#include "src/flappy_app.h"
 
 // =========================
 // Global managers
@@ -34,6 +38,10 @@ KeyboardApp  keyboardApp(&displayManager);
 ConnectApp   connectApp(&displayManager, &nvsManager);
 SpeedtestApp speedtestApp(&displayManager);
 SavedApp     savedApp(&displayManager, &nvsManager);
+PacmanApp    pacmanApp(&displayManager);
+TetrisApp    tetrisApp(&displayManager);
+SnakeApp     snakeApp(&displayManager);
+FlappyApp    flappyApp(&displayManager);
 
 // Forward declarations
 void goBackApp();
@@ -41,6 +49,10 @@ void openAboutApp();
 void openScanApp();
 void openBatteryApp();
 void openSavedApp();
+void openPacmanApp();
+void openTetrisApp();
+void openSnakeApp();
+void openFlappyApp();
 void openKeyboardForNetwork(const char* ssid);
 void connectToNetwork(const char* ssid, const char* password);
 void openConnectApp(const char* ssid, const char* password);
@@ -50,6 +62,7 @@ void openSpeedtestApp();
 // Menu definitions
 // =========================
 extern Menu toolsMenu;
+extern Menu gamesMenu;
 extern Menu mainMenu;
 
 MenuItem toolsItems[] = {
@@ -59,8 +72,17 @@ MenuItem toolsItems[] = {
   { "Back",    MENU_BACK,   nullptr,        nullptr }
 };
 
+MenuItem gamesItems[] = {
+  { "Pac-Man",     MENU_ACTION, openPacmanApp, nullptr },
+  { "Tetris",      MENU_ACTION, openTetrisApp, nullptr },
+  { "Snake",       MENU_ACTION, openSnakeApp,  nullptr },
+  { "Flappy Bird", MENU_ACTION, openFlappyApp, nullptr },
+  { "Back",        MENU_BACK,   nullptr,       nullptr }
+};
+
 MenuItem mainItems[] = {
   { "Tools", MENU_SUBMENU, nullptr,      &toolsMenu },
+  { "Games", MENU_SUBMENU, nullptr,      &gamesMenu },
   { "About", MENU_ACTION,  openAboutApp, nullptr    }
 };
 
@@ -68,6 +90,13 @@ Menu toolsMenu = {
   "Tools",
   toolsItems,
   sizeof(toolsItems) / sizeof(toolsItems[0]),
+  &mainMenu
+};
+
+Menu gamesMenu = {
+  "Games",
+  gamesItems,
+  sizeof(gamesItems) / sizeof(gamesItems[0]),
   &mainMenu
 };
 
@@ -83,25 +112,15 @@ MenuApp mainMenuApp(&mainMenu, &displayManager);
 // =========================
 // Actions
 // =========================
-void goBackApp() {
-  appManager.goBack();
-}
-
-void openAboutApp() {
-  appManager.openApp(&aboutApp);
-}
-
-void openScanApp() {
-  appManager.openApp(&scanApp);
-}
-
-void openBatteryApp() {
-  appManager.openApp(&batteryApp);
-}
-
-void openSavedApp() {
-  appManager.openApp(&savedApp);
-}
+void goBackApp()      { appManager.goBack(); }
+void openAboutApp()   { appManager.openApp(&aboutApp); }
+void openScanApp()    { appManager.openApp(&scanApp); }
+void openBatteryApp() { appManager.openApp(&batteryApp); }
+void openSavedApp()   { appManager.openApp(&savedApp); }
+void openPacmanApp()  { appManager.openApp(&pacmanApp); }
+void openTetrisApp()  { appManager.openApp(&tetrisApp); }
+void openSnakeApp()   { appManager.openApp(&snakeApp); }
+void openFlappyApp()  { appManager.openApp(&flappyApp); }
 
 void openKeyboardForNetwork(const char* ssid) {
   keyboardApp.setTarget(ssid, openConnectApp);
@@ -118,9 +137,7 @@ void openConnectApp(const char* ssid, const char* password) {
   appManager.openApp(&connectApp);
 }
 
-void openSpeedtestApp() {
-  appManager.openApp(&speedtestApp);
-}
+void openSpeedtestApp() { appManager.openApp(&speedtestApp); }
 
 // =========================
 // Setup / Loop
